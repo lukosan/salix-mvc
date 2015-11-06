@@ -1,0 +1,11 @@
+dependencies {
+	compile project(':salix-core')
+	// Spring Boot
+	compile "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
+}
+
+springBoot {
+	mainClass = 'org.lukosan.salix.Application'
+}
+
+bintray.pkg.version.desc = 'Java Spring WWW publishing framework Spring MVC module'
