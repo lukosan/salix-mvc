@@ -9,6 +9,7 @@ import org.lukosan.salix.SalixPublisher;
 import org.lukosan.salix.mvc.MvcPublisher;
 import org.lukosan.salix.mvc.SalixController;
 import org.lukosan.salix.mvc.SalixHandlerMapping;
+import org.lukosan.salix.mvc.SalixServiceProxy;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -32,6 +33,10 @@ public class MvcAutoConfiguration {
 				logger.info("PostConstruct " + getClass().getSimpleName());
 		}
 		
+		@Bean
+		public SalixServiceProxy salixServiceProxy() {
+			return new SalixServiceProxy();
+		}
 		@Bean
 		public SalixController salixController() {
 			return new SalixController();
