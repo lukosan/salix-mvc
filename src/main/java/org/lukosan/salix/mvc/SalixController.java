@@ -73,7 +73,8 @@ public class SalixController {
 		if(StringUtils.hasText(resource.getContentType()))
 			response.setContentType(resource.getContentType());
 		
-		response.addHeader("Cache-Control", "no-transform,public,max-age=300,s-maxage=1800");
+		response.setDateHeader("Expires", System.currentTimeMillis() + 300000L);
+		response.setHeader("Cache-Control", "max-age=300");
 		
 		switch(resource.getResourceType()) {
 			case TEXT : response.getWriter().write(((SalixResourceText)resource).getText()); break;
