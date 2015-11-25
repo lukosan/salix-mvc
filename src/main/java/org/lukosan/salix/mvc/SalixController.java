@@ -1,14 +1,18 @@
 package org.lukosan.salix.mvc;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.lukosan.salix.MapUtils;
+import org.lukosan.salix.ResourceWriter;
 import org.lukosan.salix.SalixResource;
-import org.lukosan.salix.SalixResourceBinary;
 import org.lukosan.salix.SalixResourceJson;
 import org.lukosan.salix.SalixResourceText;
 import org.lukosan.salix.SalixUrl;
@@ -20,6 +24,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
@@ -29,6 +34,8 @@ public class SalixController {
 	private SalixServiceProxy salixService;
 	@Autowired
 	private SalixHandlerMapping salixHandlerMaping;
+	
+	private Set<String> served = new HashSet<String>();
 	
 	@RequestMapping("/salix-url-handler")
 	public ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Model model) throws SalixHttpException {
@@ -63,7 +70,12 @@ public class SalixController {
 	}
 	
 	@RequestMapping("/salix/resource/{sourceId:.+}")
-	public void resource(@PathVariable String sourceId, HttpServletRequest request, HttpServletResponse response) throws SalixHttpException, IOException {
+	public void resource(@PathVariable String sourceId, WebRequest webRequest, HttpServletRequest request, HttpServletResponse response) throws SalixHttpException, IOException {
+		
+		if(served.contains(request.getServerName() + "_" + sourceId) && webRequest.checkNotModified(LocalDate.now().atStartOfDay().toEpochSecond(ZoneOffset.UTC)*1000))
+			return;
+		
+		served.add(request.getServerName() + "_" + sourceId);
 		
 		SalixResource resource = salixService.resource(sourceId, request.getServerName());
 		
@@ -76,11 +88,8 @@ public class SalixController {
 		response.setDateHeader("Expires", System.currentTimeMillis() + 300000L);
 		response.setHeader("Cache-Control", "max-age=300");
 		
-		switch(resource.getResourceType()) {
-			case TEXT : response.getWriter().write(((SalixResourceText)resource).getText()); break;
-			case JSON : response.getWriter().write(MapUtils.asString(((SalixResourceJson)resource).getMap())); break;
-			case BINARY : response.getOutputStream().write(((SalixResourceBinary)resource).getBytes());
-		}
+		ResourceWriter writer = new HttpResourceWriter(response);
+		resource.writeTo(writer);	
 	}
 	
 	protected void setResponseProperties(HttpServletResponse response, Map<String, Object> map) {
@@ -90,6 +99,7 @@ public class SalixController {
 	@RequestMapping("/salix-url-handler-reload")
 	public void reload() {
 		salixHandlerMaping.reloadHandlers();
+		served = new HashSet<String>();
 	}
 	
 	@ExceptionHandler({ SalixHttpException.class })
