@@ -38,15 +38,16 @@ public class SalixController {
 	private Set<String> served = new HashSet<String>();
 	
 	@RequestMapping("/salix-url-handler")
-	public ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Model model) throws SalixHttpException {
+	public ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Model model) throws SalixHttpException, IOException {
 		
 		SalixUrl url = salixService.url(request.getRequestURI(), request.getServerName());
 		
 		if(null == url)
 			throw new SalixHttpException(HttpStatus.NOT_FOUND);
 		
-		if(url.getStatus() != HttpStatus.OK.value())
-			throw new SalixHttpException(url.getStatus());
+		if(url.getStatus() != HttpStatus.OK.value()) {
+			throw new SalixHttpException(url.getStatus(), url.getView());
+		}
 
 		Map<String, Object> map = url.getMap();
 
@@ -103,8 +104,12 @@ public class SalixController {
 	}
 	
 	@ExceptionHandler({ SalixHttpException.class })
-	public void handledExceptions(HttpServletRequest request, HttpServletResponse response, Exception ex) {
+	public void handledExceptions(HttpServletRequest request, HttpServletResponse response, Exception ex) throws IOException {
 		SalixHttpException she = (SalixHttpException) ex;
+		if(she.getStatus() == HttpStatus.MOVED_PERMANENTLY || she.getStatus() == HttpStatus.FOUND) {
+			response.setStatus(she.getStatus().value());
+			response.sendRedirect(she.getView());
+		}
 		response.setStatus(she.getStatus().value());
 	}
 
