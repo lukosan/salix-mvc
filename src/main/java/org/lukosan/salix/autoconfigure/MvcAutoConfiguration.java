@@ -6,6 +6,7 @@ import javax.servlet.Servlet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.lukosan.salix.SalixPublisher;
+import org.lukosan.salix.mvc.DisableUrlSessionFilter;
 import org.lukosan.salix.mvc.MvcPublisher;
 import org.lukosan.salix.mvc.SalixController;
 import org.lukosan.salix.mvc.SalixHandlerMapping;
@@ -50,6 +51,12 @@ public class MvcAutoConfiguration {
 		@Bean
 		public SalixPublisher mvcPublisher() {
 			return new MvcPublisher();
+		}
+		
+		@Bean
+		@ConditionalOnProperty(prefix = "salix.mvc.disablejsession", name = "enabled", matchIfMissing = true)
+		public DisableUrlSessionFilter disableUrlSessionFilter() {
+			return new DisableUrlSessionFilter();
 		}
 		
 	}
