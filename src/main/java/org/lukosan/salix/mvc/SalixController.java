@@ -80,7 +80,7 @@ public class SalixController {
 		
 		SalixResource resource = salixService.resource(sourceId, request.getServerName());
 		
-		if(null == resource)
+		if(null == resource || ! resource.exists())
 			throw new SalixHttpException(HttpStatus.NOT_FOUND);
 		
 		if(StringUtils.hasText(resource.getContentType()))
