@@ -75,14 +75,14 @@ public class SalixController {
 		
 		if(served.contains(request.getServerName() + "_" + sourceId) && webRequest.checkNotModified(LocalDate.now().atStartOfDay().toEpochSecond(ZoneOffset.UTC)*1000))
 			return;
-		
-		served.add(request.getServerName() + "_" + sourceId);
-		
+				
 		SalixResource resource = salixService.resource(sourceId, request.getServerName());
 		
 		if(null == resource || ! resource.exists())
 			throw new SalixHttpException(HttpStatus.NOT_FOUND);
 		
+		served.add(request.getServerName() + "_" + sourceId);
+
 		if(StringUtils.hasText(resource.getContentType()))
 			response.setContentType(resource.getContentType());
 		
